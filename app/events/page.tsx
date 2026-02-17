@@ -25,9 +25,16 @@ export default function EventsPage() {
     });
 
     const [events, setEvents] = useState<any[]>([]);
+    const [user, setUser] = useState<any>(null);
 
-    // Load events from localStorage or seed with mock data
+    // Load user and events
     useEffect(() => {
+        // Get logged-in user
+        const loggedInUser = localStorage.getItem('loggedInUser');
+        if (loggedInUser) {
+            setUser(JSON.parse(loggedInUser));
+        }
+
         // Subscribe to Firestore events collection
         const unsub = subscribeEvents((docs) => {
             setEvents(docs || []);
@@ -74,6 +81,10 @@ export default function EventsPage() {
         return matchesSearch && matchesCategory && matchesDate && matchesTime && matchesLocation;
     });
 
+    // Separate user's own events from other events
+    const myEvents = user ? filteredEvents.filter(event => event.created_by === user.id) : [];
+    const otherEvents = user ? filteredEvents.filter(event => event.created_by !== user.id) : filteredEvents;
+
     return (
         <div className="container">
             <SearchWidget
@@ -103,16 +114,29 @@ export default function EventsPage() {
                 }}
             />
 
+            {user && myEvents.length > 0 && (
+                <div className="events-section">
+                    <h2>My Events</h2>
+                    <div className="events-grid">
+                        {myEvents.map(event => (
+                            <EventCard key={event.id} event={event} isCreator={true} />
+                        ))}
+                    </div>
+                </div>
+            )}
+
             <div className="events-section">
-                <h2>Discover Community Events</h2>
+                <h2>{user && myEvents.length > 0 ? 'Other Community Events' : 'Discover Community Events'}</h2>
                 <div className="events-grid">
-                    {filteredEvents.length > 0 ? (
-                        filteredEvents.map(event => (
-                            <EventCard key={event.id} event={event} />
+                    {otherEvents.length > 0 ? (
+                        otherEvents.map(event => (
+                            <EventCard key={event.id} event={event} isCreator={false} />
                         ))
                     ) : (
                         <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem' }}>
-                            No events found matching your criteria. Try adjusting your filters.
+                            {user && myEvents.length > 0 && filteredEvents.length === myEvents.length 
+                                ? 'No other events found matching your criteria.'
+                                : 'No events found matching your criteria. Try adjusting your filters.'}
                         </p>
                     )}
                 </div>

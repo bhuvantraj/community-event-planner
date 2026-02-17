@@ -2,12 +2,13 @@
 
 import { useState, useEffect, FormEvent } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { mockEvents, categories } from '@/lib/mockData';
-
+import { categories } from '@/lib/mockData';
+import { updateEvent, subscribeEvents } from '@/lib/eventService';
+import { getAuth } from 'firebase/auth';
 export default function EditEventPage() {
     const router = useRouter();
     const params = useParams();
-    const eventId = parseInt(Array.isArray(params?.id) ? params.id[0] : String(params?.id));
+    const eventId = Array.isArray(params?.id) ? params.id[0] : String(params?.id);
 
     const [event, setEvent] = useState<any>(null);
 
@@ -29,13 +30,26 @@ export default function EditEventPage() {
             return;
         }
 
-        // Fetch event from Firestore (via subscription handled in event details page)
-        const storedEvents = JSON.parse(localStorage.getItem('events') || '[]');
-        const allEvents = storedEvents.length > 0 ? storedEvents : [];
-        const foundEvent = allEvents.find((e: any) => e.id === eventId) || null;
-        setEvent(foundEvent);
+        // Subscribe to events and find the matching event
+        const unsub = subscribeEvents((docs) => {
+            const foundEvent = (docs || []).find((d: any) => d.id === eventId);
+            
+            if (!foundEvent) {
+                setEvent(null);
+                return;
+            }
 
-        if (foundEvent) {
+            const userData = JSON.parse(loggedInUser);
+            
+            // Check if user is the creator
+            if (foundEvent.created_by !== userData.id) {
+                alert('You can only edit events you created');
+                router.push(`/events/${eventId}`);
+                return;
+            }
+
+            setEvent(foundEvent);
+
             // Parse existing time string to separate start and end times
             let start = '';
             let end = '';
@@ -59,7 +73,9 @@ export default function EditEventPage() {
                 category: foundEvent.category,
                 description: foundEvent.description
             });
-        }
+        });
+
+        return () => unsub && unsub();
     }, [eventId, router]);
 
     if (!event) {
@@ -80,28 +96,34 @@ export default function EditEventPage() {
             ? `${formData.startTime} - ${formData.endTime}`
             : formData.startTime;
 
-        // Update event in localStorage
-        const storedEvents2 = JSON.parse(localStorage.getItem('events') || '[]');
-        const updatedEvents = storedEvents2.map((e: any) => {
-            if (e.id === eventId) {
-                return {
-                    ...e,
-                    title: formData.title,
-                    date: formData.date,
-                    time: timeRange,
-                    location: formData.location,
-                    category: formData.category,
-                    description: formData.description
-                };
-            }
-            return e;
-        });
+        // Get current user from Firebase
+        const auth = getAuth();
+        const currentFirebaseUser = auth.currentUser;
+        
+        if (!currentFirebaseUser) {
+            alert('You must be signed in to edit events');
+            return;
+        }
 
-        // Optimistically update localStorage for offline UX; Firestore update will be handled elsewhere or via a follow-up action
-        localStorage.setItem('events', JSON.stringify(updatedEvents));
+        // Call Firestore updateEvent
+        const patch = {
+            title: formData.title,
+            date: formData.date,
+            time: timeRange,
+            location: formData.location,
+            category: formData.category,
+            description: formData.description
+        };
 
-        alert('Event updated locally. If using Firestore, please sync or re-open the event to refresh.');
-        router.push(`/events/${eventId}`);
+        updateEvent(eventId, patch, { uid: currentFirebaseUser.uid })
+            .then(() => {
+                alert('Event updated successfully!');
+                router.push(`/events/${eventId}`);
+            })
+            .catch((err) => {
+                console.error('Update failed:', err);
+                alert(err.message || 'Failed to update event');
+            });
     };
 
     return (
