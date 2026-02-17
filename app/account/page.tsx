@@ -84,7 +84,7 @@ export default function AccountPage() {
                         <label style={{ fontWeight: '600', color: 'var(--text-primary)' }}>Username</label>
                         <div style={{
                             padding: '0.75rem',
-                            backgroundColor: 'white',
+                            backgroundColor: 'var(--card-background)',
                             borderRadius: '6px',
                             border: '1px solid var(--border-color)',
                             color: 'var(--text-primary)'
@@ -97,7 +97,7 @@ export default function AccountPage() {
                         <label style={{ fontWeight: '600', color: 'var(--text-primary)' }}>Email</label>
                         <div style={{
                             padding: '0.75rem',
-                            backgroundColor: 'white',
+                            backgroundColor: 'var(--card-background)',
                             borderRadius: '6px',
                             border: '1px solid var(--border-color)',
                             color: 'var(--text-primary)'
@@ -110,7 +110,7 @@ export default function AccountPage() {
                         <label style={{ fontWeight: '600', color: 'var(--text-primary)' }}>User ID</label>
                         <div style={{
                             padding: '0.75rem',
-                            backgroundColor: 'white',
+                            backgroundColor: 'var(--card-background)',
                             borderRadius: '6px',
                             border: '1px solid var(--border-color)',
                             color: 'var(--text-secondary)',

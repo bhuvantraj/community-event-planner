@@ -629,6 +629,38 @@ button {
   --shadow-lg: 0 12px 36px rgba(2, 6, 23, 0.6);
 }
 
+/* Form inputs styling for dark mode */
+.dark .form-group input,
+.dark .form-group textarea,
+.dark .form-group select {
+  background-color: var(--card-background);
+  color: var(--text-primary);
+  border-color: rgba(255, 255, 255, 0.06);
+  color-scheme: dark;
+}
+
+/* Specific styling for date and time inputs in dark mode */
+.dark input[type="date"],
+.dark input[type="time"] {
+  color-scheme: dark;
+}
+
+.dark input[type="date"]::placeholder,
+.dark input[type="time"]::placeholder,
+.dark .form-group input::placeholder,
+.dark .form-group textarea::placeholder,
+.dark .form-group select::placeholder {
+  color: var(--text-secondary);
+  opacity: 1;
+}
+
+.dark .form-group input:focus,
+.dark .form-group textarea:focus,
+.dark .form-group select:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(106, 168, 255, 0.1);
+}
+
 /* Smooth transitions for theme changes */
 body, .navbar, .search-widget, .event-card, .form-container, .event-details {
   transition: background-color 200ms ease, color 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
